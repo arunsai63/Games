@@ -39,20 +39,15 @@ def render_board(board):
         screen.blit(highlight, (mouse_click[1]*ICON_SIZE, mouse_click[0]*ICON_SIZE))
     pygame.display.flip()
 
-def valid(board):
-    for row in board:
-        r = [i for i in row if i != 0]
-        if len(set(r)) != len(r):
-            return False
-    for i in range(9):
-        r = [board[c][i] for c in range(9) if board[c][i] != 0]
-        if len(set(r)) != len(r):
-            return False
-    for i in [0,3,6]:
-        for j in [0,3,6]:
-            r = [board[i+a][j+b] for a in range(3) for b in range(3) if board[i+a][j+b] != 0]
-            if len(set(r)) != len(r):
-                return False
+def can_place(board, row, col, num):
+    if num in board[row]:
+        return False
+    if num in [board[i][col] for i in range(9)]:
+        return False
+    row -= (row % 3)
+    col -= (col % 3)
+    if num in [board[row+i][col+j] for i in range(3) for j in range(3) if board[row+i][col+j]]:
+        return False
     return True
 
 def solve(board, render_func):
@@ -60,8 +55,8 @@ def solve(board, render_func):
         for col in range(9):
             if board[row][col] == 0:
                 for i in range(1,10):
-                    board[row][col] = i
-                    if valid(board):
+                    if can_place(board, row, col, i):
+                        board[row][col] = i
                         render_func(board)
                         if solve(board, render_func):
                             return True
@@ -90,10 +85,10 @@ while running:
                 board = [[0 for _ in range(9)] for i in range(9)]
             elif event.key >= K_0 and event.key <= K_9:
                 if mouse_click is not None:
-                    board[mouse_click[0]][mouse_click[1]] = event.key - K_0
-                    if not valid(board):
+                    if event.key == K_0 or can_place(board, mouse_click[0], mouse_click[1], event.key - K_0):
+                        board[mouse_click[0]][mouse_click[1]] = event.key - K_0
+                    else:
                         print(f"{event.key - K_0} cannot be placed here")
-                        board[mouse_click[0]][mouse_click[1]] = 0
                     mouse_click = None
             
     render_board(board)

@@ -16,14 +16,27 @@ def valid(board):
 
     return True
 
+def can_place(board, row, col, num):
+    if num in board[row]:
+        return False
+    if num in [board[i][col] for i in range(9)]:
+        return False
+    row -= (row % 3)
+    col -= (col % 3)
+    if num in [board[row+i][col+j] for i in range(3) for j in range(3) if board[row+i][col+j]]:
+        return False
+    return True
+
+
 def solve(board): # back-tracking algorithm
     for row in range(9):
         for col in range(9):
             if not board[row][col]:
                 for num in range(1,10):
-                    board[row][col] = num
-                    if valid(board) and solve(board):
-                        return True
+                    if can_place(board, row, col, num):
+                        board[row][col] = num
+                        if solve(board):
+                            return True
                 board[row][col] = 0            
                 return False
     return True
